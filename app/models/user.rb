@@ -13,6 +13,10 @@ class User < ApplicationRecord
   has_many :reverses_of_relationship, class_name: 'Relationship', foreign_key: 'follow_id'
   has_many :followers, through: :reverses_of_relationship, source: :user
   
+  has_many :favorites
+  has_many :microposts, through: :favorites
+  has_many :likes, through: :favorites, source: :micropost
+  
   def follow(other_user)
     unless self == other_user
       self.relationships.find_or_create_by(follow_id: other_user.id)
@@ -36,5 +40,19 @@ class User < ApplicationRecord
     # User がフォローしている User の id の配列を取得
     # 自分自身の self.id もデータ型を合わせるために [self.id] と配列に変換して、追加
   end
+  
+  def favorite(micropost)
+    self.favorites.find_or_create_by(micropost_id: micropost.id)
+  end
+  
+  def unfavorite(micropost)
+    favorite = self.favorites.find_by(micropost_id: micropost.id)
+    favorite.destroy if favorite
+  end
+  
+  def favorite?(micropost)
+    self.favorites.exists?(micropost_id: micropost.id)
+  end
+  
   
 end
